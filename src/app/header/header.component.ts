@@ -1,5 +1,8 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 
+import { User } from '../auth/auth/user.model';
+import { AuthService } from '../auth/auth.service';
 import { DataStorageService } from '../shared/data-storage.service';
 
 @Component({
@@ -7,17 +10,17 @@ import { DataStorageService } from '../shared/data-storage.service';
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
-export class HeaderComponent implements OnInit {
-  @Output() featureSelected = new EventEmitter<string>();
+export class HeaderComponent implements OnInit, OnDestroy {
   collapsed = true;
+  isAuthenticated = false;
+  private userSub: Subscription;
 
-  constructor(private dataStorageService: DataStorageService) { }
+  constructor(private dataStorageService: DataStorageService, private authService: AuthService) { }
 
   ngOnInit(): void {
-  }
-
-  onSelect(feature: string): void {
-    this.featureSelected.emit(feature);
+    this.userSub = this.authService.user.subscribe((user: User) => {
+      this.isAuthenticated = !!user; // !!user is equivalent to !user ? false : true;
+    });
   }
 
   onSaveData(): void {
@@ -26,5 +29,13 @@ export class HeaderComponent implements OnInit {
 
   onFetchData(): void {
     this.dataStorageService.fetchRecipes().subscribe();
+  }
+
+  onLogout(): void {
+    this.authService.logout();
+  }
+
+  ngOnDestroy(): void {
+    this.userSub.unsubscribe();
   }
 }

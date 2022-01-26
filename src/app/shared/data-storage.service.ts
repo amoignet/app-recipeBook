@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, tap } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { exhaustMap, map, take, tap } from 'rxjs/operators';
 
 import { RecipeService } from '../recipes/recipe.service';
+import { AuthService } from '../auth/auth.service';
 import { Recipe } from '../recipes/recipe.model';
 import { Observable } from 'rxjs';
 
@@ -11,7 +12,7 @@ import { Observable } from 'rxjs';
 })
 export class DataStorageService {
 
-  constructor(private Http: HttpClient,  private recipeService: RecipeService) { }
+  constructor(private Http: HttpClient,  private recipeService: RecipeService, private authService: AuthService) { }
 
   storeRecipes(): void {
     const recipes = this.recipeService.getRecipes();
@@ -22,7 +23,10 @@ export class DataStorageService {
   }
 
   fetchRecipes(): Observable<Recipe[]> {
-    return this.Http.get('https://recipes-cfc0d-default-rtdb.firebaseio.com/recipes.json')
+    return this.Http
+      .get<Recipe[]>(
+        'https://recipes-cfc0d-default-rtdb.firebaseio.com/recipes.json',
+      )
       .pipe(
         map((recipes: Recipe[]) => {
           return recipes.map((recipe: Recipe) => {
